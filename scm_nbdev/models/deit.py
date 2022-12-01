@@ -39,7 +39,7 @@ def embeddings_to_cosine_similarity_matrix(tokens):
     return x
 
 class SCM(VisionTransformer):
-    def __init__(self, num_layers=10, *args, **kwargs):
+    def __init__(self, num_layers=4, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.head = nn.Linear(self.embed_dim, self.num_classes)
         self.head = nn.Conv2d(self.embed_dim, self.num_classes,
@@ -56,7 +56,7 @@ class SCM(VisionTransformer):
                                        fusion_cfg=dict(lapMat=encoder.fuse.laplacian, 
                                                  loss_rate=1, 
                                                  grid_size=(14, 14), 
-                                                 iteration=16)))
+                                                 iteration=4)))
 
     def forward_features(self, x):
         # taken from https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
@@ -102,7 +102,6 @@ class SCM(VisionTransformer):
             x_logits = self.avgpool(x_patch).squeeze(3).squeeze(2)
             return x_logits
         else:
-            # x_logits= self.scm_forward(x_patch, cam)
             x_logits = self.avgpool(pred_semantic).squeeze(3).squeeze(2)
             predict = pred_cam*pred_semantic
             if test_select!=0 and test_select>0:
@@ -110,12 +109,6 @@ class SCM(VisionTransformer):
                 predict = torch.tensor([torch.take(a, idx, axis=0) for (a, idx)  
                                         in zip(cams, topk_ind)])
             return x_logits, predict
-
-    def scm_forward(self, x_patch, cam):
-        for i, layer in enumerate(self.layers):
-            x_patch, cam = layer(x_patch, cam)
-        x_logits = self.avgpool(x_patch).squeeze(3).squeeze(2)
-        return x_logits
 
 class Encoder(nn.Module):
     def __init__(self,

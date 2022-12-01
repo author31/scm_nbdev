@@ -108,8 +108,6 @@ def warm_cos_lr(lr, total_iters, warmup_total_iters, warmup_lr_start, iters):
         lr = (lr - warmup_lr_start) * iters / float(
             warmup_total_iters
         ) + warmup_lr_start
-    elif iters/total_iters <0.75:
-        lr= lr
     else:
         lr *= 0.5 * (
             1.0
